@@ -1,29 +1,41 @@
-import numpy as np
-import pandas as pd 
-from sklearn.linear_model import LinearRegression 
-import matplotlib.pyplot as plt 
+
+# Carregando as bibliotecas necessárias
+library(tcltk)
+library(ggplot2)
+
+# Definindo a semente para a geração de dados aleatórios
+set.seed(42)
 
 # Gerando dados sintéticos
-np.random.seed(42)
-temperatura = np.random.rand(100, 1) * 40  # Temperatura em Celsius
-hora_do_dia = np.random.rand(100, 1) * 24  # Hora do dia em horas
-demanda_energia = (temperatura * 2) + (hora_do_dia * 3) + np.random.randn(100, 1) * 10
+temperatura <- runif(100, min = 0, max = 40)  # Temperatura em Celsius
+hora_do_dia <- runif(100, min = 0, max = 24)  # Hora do dia em horas
+demanda_energia <- (temperatura * 2) + (hora_do_dia * 3) + rnorm(100, sd = 10)
 
-# Criando DataFrame
-dados = pd.DataFrame(np.concatenate([temperatura, hora_do_dia, demanda_energia], axis=1), 
-                     columns=['Temperatura', 'Hora do Dia', 'Demanda de Energia'])
+# Criando um data frame
+dados <- data.frame(Temperatura = temperatura, Hora_do_Dia = hora_do_dia, Demanda_de_Energia = demanda_energia)
 
-# Preparando os dados para treinamento
-X = dados[['Temperatura', 'Hora do Dia']]
-y = dados['Demanda de Energia']
+# Treinamento do modelo de regressão linear
+modelo <- lm(Demanda_de_Energia ~ Temperatura + Hora_do_Dia, data = dados)
 
-# Treinamento do modelo
-modelo = LinearRegression().fit(X, y)
+# Previsões do modelo
+predicoes <- predict(modelo, newdata = dados)
 
-# Avaliação do modelo (métricas não foram calculadas)
-# Visualização dos resultados
-plt.scatter(y, modelo.predict(X))
-plt.xlabel('Demanda Real de Energia')
-plt.ylabel('Demanda Prevista de Energia')
-plt.title('Previsões de Demanda de Energia')
-plt.show()
+# Salvando a visualização dos resultados em um arquivo temporário
+plot_file <- tempfile(fileext = ".png")
+ggplot(dados, aes(x = Demanda_de_Energia, y = predicoes)) +
+  geom_point() +
+  labs(x = "Demanda Real de Energia", y = "Demanda Prevista de Energia", title = "Previsões de Demanda de Energia") +
+  theme_minimal() +
+  ggsave(plot_file)
+
+# Criando a interface Tk
+root <- tktoplevel()
+tkwm.title(root, "Previsões de Demanda de Energia")
+
+# Adicionando o gráfico à interface
+img <- tkimage.create("photo", file = plot_file)
+lbl <- tklabel(root, image = img)
+tkpack(lbl)
+
+# Executando a interface Tk
+tk.mainloop()
